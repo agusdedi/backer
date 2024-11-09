@@ -17,6 +17,7 @@ require (
 	github.com/leekchan/accounting v1.0.0
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect
 	github.com/ugorji/go v1.1.9 // indirect
 	github.com/veritrans/go-midtrans v0.0.0-20200831092805-5bfccc26bd1f
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
