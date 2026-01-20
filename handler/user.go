@@ -27,7 +27,7 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.APIResponse("Registration failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.APIResponse("Invalid input", http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
@@ -43,7 +43,7 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 	token, err := h.authService.GenerateToken(newUser.ID)
 
 	if err != nil {
-		response := helper.APIResponse("Registration failed", http.StatusBadRequest, "error", nil)
+		response := helper.APIResponse("Failed to generate authentication token", http.StatusBadRequest, "error", nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -63,7 +63,7 @@ func (h *userHandler) Login(c *gin.Context) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.APIResponse("Login failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.APIResponse("Invalid input", http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
@@ -73,7 +73,7 @@ func (h *userHandler) Login(c *gin.Context) {
 	if err != nil {
 		errorMessage := gin.H{"errors": err.Error()}
 
-		response := helper.APIResponse("Login failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.APIResponse("Invalid email or password", http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
@@ -81,7 +81,7 @@ func (h *userHandler) Login(c *gin.Context) {
 	token, err := h.authService.GenerateToken(loggedinUser.ID)
 
 	if err != nil {
-		response := helper.APIResponse("Login failed", http.StatusBadRequest, "error", nil)
+		response := helper.APIResponse("Failed to generate authentication token", http.StatusBadRequest, "error", nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
