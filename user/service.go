@@ -22,8 +22,20 @@ func NewService(repository Repository) *service {
 	return &service{repository}
 }
 
+var ErrEmailAlreadyRegistered = errors.New("email already registered")
+
 func (s *service) RegisterUser(input RegisterUserInput) (User, error) {
 	user := User{}
+
+	existingUser, err := s.repository.FindByEmail(input.Email)
+	if err != nil {
+		return user, err
+	}
+
+	if existingUser.ID != 0 {
+		return user, ErrEmailAlreadyRegistered
+	}
+
 	user.Name = input.Name
 	user.Email = input.Email
 	user.Occupation = input.Occupation

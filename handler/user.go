@@ -4,6 +4,7 @@ import (
 	"backer/auth"
 	"backer/helper"
 	"backer/user"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -33,9 +34,16 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 	}
 
 	newUser, err := h.userService.RegisterUser(input)
-
 	if err != nil {
-		response := helper.APIResponse("Registration failed", http.StatusBadRequest, "error", nil)
+		errorMessage := gin.H{"errors": err.Error()}
+
+		if errors.Is(err, user.ErrEmailAlreadyRegistered) {
+			response := helper.APIResponse("Email already registered", http.StatusConflict, "error", errorMessage)
+			c.JSON(http.StatusConflict, response)
+			return
+		}
+
+		response := helper.APIResponse("Registration failed", http.StatusBadRequest, "error", errorMessage)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
