@@ -59,7 +59,6 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 	formatter := user.FormatUser(newUser, token)
 
 	response := helper.APIResponse("Account registered successfully", http.StatusOK, "success", formatter)
-
 	c.JSON(http.StatusOK, response)
 }
 
@@ -97,7 +96,6 @@ func (h *userHandler) Login(c *gin.Context) {
 	formatter := user.FormatUser(loggedinUser, token)
 
 	response := helper.APIResponse("Successfuly logged in", http.StatusOK, "success", formatter)
-
 	c.JSON(http.StatusOK, response)
 }
 
@@ -142,7 +140,6 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
 		response := helper.APIResponse("No avatar file provided", http.StatusBadRequest, "error", data)
-
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -156,7 +153,6 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
 		response := helper.APIResponse("Failed to save avatar file", http.StatusBadRequest, "error", data)
-
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -165,13 +161,11 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
 		response := helper.APIResponse("Failed to update avatar", http.StatusBadRequest, "error", data)
-
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	data := gin.H{"is_uploaded": true}
 	response := helper.APIResponse("Avatar uploaded successfully", http.StatusOK, "success", data)
-
 	c.JSON(http.StatusOK, response)
 }

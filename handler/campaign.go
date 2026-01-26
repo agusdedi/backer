@@ -4,9 +4,12 @@ import (
 	"backer/campaign"
 	"backer/helper"
 	"backer/user"
+	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -135,5 +138,90 @@ func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 	}
 
 	response := helper.APIResponse("Campaign updated successfully", http.StatusOK, "success", campaign.FormatCampaign(updatedCampaign))
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *campaignHandler) UploadImage(c *gin.Context) {
+	var input campaign.CreateCampaignImageInput
+
+	err := c.ShouldBind(&input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Invalid input", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	currentUser := c.MustGet("currentUser").(user.User)
+	input.User = currentUser
+	userID := currentUser.ID
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("No file uploaded", http.StatusBadRequest, "error", data)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	allowedExtensions := map[string]bool{
+		".jpg":  true,
+		".jpeg": true,
+		".png":  true,
+	}
+
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	if !allowedExtensions[ext] {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("Invalid file type. Only JPG, JPEG, and PNG are allowed", http.StatusBadRequest, "error", data)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	maxSize := int64(2 << 20)
+	if file.Size > maxSize {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("File size too large. Maximum 2MB", http.StatusBadRequest, "error", data)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	timestamp := time.Now().Unix()
+	fileName := fmt.Sprintf("%d-%d-%s", userID, timestamp, file.Filename)
+	path := fmt.Sprintf("images/%s", fileName)
+
+	err = c.SaveUploadedFile(file, path)
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("Failed to save file to server", http.StatusInternalServerError, "error", data)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	_, err = h.service.SaveCampaignImage(input, path)
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error(), "is_uploaded": false}
+
+		if strings.Contains(err.Error(), "not found") {
+			response := helper.APIResponse("Campaign not found", http.StatusNotFound, "error", errorMessage)
+			c.JSON(http.StatusNotFound, response)
+			return
+		}
+
+		if strings.Contains(err.Error(), "unauthorized") {
+			response := helper.APIResponse("You are not authorized to upload image for this campaign", http.StatusForbidden, "error", errorMessage)
+			c.JSON(http.StatusForbidden, response)
+			return
+		}
+
+		response := helper.APIResponse("Failed to save image to database", http.StatusInternalServerError, "error", errorMessage)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	data := gin.H{"is_uploaded": true}
+	response := helper.APIResponse("Campaign image uploaded successfully", http.StatusOK, "success", data)
 	c.JSON(http.StatusOK, response)
 }
