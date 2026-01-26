@@ -11,6 +11,7 @@ type Service interface {
 	GetCampaigns(userID int) ([]Campaign, error)
 	GetCampaignByID(input GetCampaignDetailInput) (Campaign, error)
 	CreateCampaign(input CreateCampaignInput) (Campaign, error)
+	UpdateCampaign(inputID GetCampaignDetailInput, inputData CreateCampaignInput) (Campaign, error)
 }
 
 type service struct {
@@ -53,6 +54,11 @@ func (s *service) GetCampaignByID(input GetCampaignDetailInput) (Campaign, error
 	return campaign, nil
 }
 
+func (s *service) generateCampaignSlug(name string, userID int) string {
+	slugCandidate := fmt.Sprintf("%s %d", name, userID)
+	return slug.Make(slugCandidate)
+}
+
 func (s *service) CreateCampaign(input CreateCampaignInput) (Campaign, error) {
 	campaign := Campaign{}
 	campaign.Name = input.Name
@@ -62,8 +68,7 @@ func (s *service) CreateCampaign(input CreateCampaignInput) (Campaign, error) {
 	campaign.Perks = input.Perks
 	campaign.UserID = input.User.ID
 
-	slugCandidate := fmt.Sprintf("%s %d", input.Name, input.User.ID)
-	campaign.Slug = slug.Make(slugCandidate)
+	campaign.Slug = s.generateCampaignSlug(input.Name, input.User.ID)
 
 	newCampaign, err := s.repository.Save(campaign)
 	if err != nil {
@@ -71,4 +76,34 @@ func (s *service) CreateCampaign(input CreateCampaignInput) (Campaign, error) {
 	}
 
 	return newCampaign, nil
+}
+
+func (s *service) UpdateCampaign(inputID GetCampaignDetailInput, inputData CreateCampaignInput) (Campaign, error) {
+	campaign, err := s.repository.FindByID(inputID.ID)
+	if err != nil {
+		return campaign, err
+	}
+
+	if campaign.ID == 0 {
+		return campaign, errors.New("campaign not found")
+	}
+
+	if campaign.UserID != inputData.User.ID {
+		return campaign, errors.New("not authorized to update this campaign")
+	}
+
+	campaign.Name = inputData.Name
+	campaign.ShortDescription = inputData.ShortDescription
+	campaign.Description = inputData.Description
+	campaign.GoalAmount = inputData.GoalAmount
+	campaign.Perks = inputData.Perks
+
+	campaign.Slug = s.generateCampaignSlug(inputData.Name, inputData.User.ID)
+
+	updatedCampaign, err := s.repository.Update(campaign)
+	if err != nil {
+		return updatedCampaign, err
+	}
+
+	return updatedCampaign, nil
 }

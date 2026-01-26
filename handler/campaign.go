@@ -6,6 +6,7 @@ import (
 	"backer/user"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -63,7 +64,7 @@ func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.APIResponse("Failed to create campaign", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.APIResponse("Invalid input", http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
@@ -73,11 +74,66 @@ func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 
 	newCampaign, err := h.service.CreateCampaign(input)
 	if err != nil {
-		response := helper.APIResponse("Failed to create campaign", http.StatusBadRequest, "error", nil)
+		errorMessage := gin.H{"errors": err.Error()}
+
+		response := helper.APIResponse("Failed to create campaign", http.StatusInternalServerError, "error", errorMessage)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := helper.APIResponse("Campaign created successfully", http.StatusCreated, "success", campaign.FormatCampaign(newCampaign))
+	c.JSON(http.StatusCreated, response)
+}
+
+func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
+	var inputID campaign.GetCampaignDetailInput
+
+	err := c.ShouldBindUri(&inputID)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Invalid campaign ID", http.StatusBadRequest, "error", errorMessage)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	response := helper.APIResponse("Success to create campaign", http.StatusOK, "success", campaign.FormatCampaign(newCampaign))
+	var inputData campaign.CreateCampaignInput
+
+	err = c.ShouldBindJSON(&inputData)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Invalid input", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	currentUser := c.MustGet("currentUser").(user.User)
+	inputData.User = currentUser
+
+	updatedCampaign, err := h.service.UpdateCampaign(inputID, inputData)
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error()}
+
+		if strings.Contains(err.Error(), "not found") {
+			response := helper.APIResponse("Campaign not found", http.StatusNotFound, "error", errorMessage)
+			c.JSON(http.StatusNotFound, response)
+			return
+		}
+
+		if strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "not authorized") {
+			response := helper.APIResponse("You are not authorized to update this campaign", http.StatusForbidden, "error", errorMessage)
+			c.JSON(http.StatusForbidden, response)
+			return
+		}
+
+		response := helper.APIResponse("Failed to update campaign", http.StatusBadRequest, "error", errorMessage)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := helper.APIResponse("Campaign updated successfully", http.StatusOK, "success", campaign.FormatCampaign(updatedCampaign))
 	c.JSON(http.StatusOK, response)
 }
