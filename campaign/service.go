@@ -18,6 +18,7 @@ type Service interface {
 	GetCampaignByID(input GetCampaignDetailInput) (Campaign, error)
 	CreateCampaign(input CreateCampaignInput) (Campaign, error)
 	UpdateCampaign(inputID GetCampaignDetailInput, inputData CreateCampaignInput) (Campaign, error)
+	ValidateCampaignOwnership(campaignID int, userID int) error
 	SaveCampaignImage(input CreateCampaignImageInput, fileLocation string) (CampaignImage, error)
 }
 
@@ -115,20 +116,24 @@ func (s *service) UpdateCampaign(inputID GetCampaignDetailInput, inputData Creat
 	return updatedCampaign, nil
 }
 
-func (s *service) SaveCampaignImage(input CreateCampaignImageInput, fileLocation string) (CampaignImage, error) {
-	campaign, err := s.repository.FindByID(input.CampaignID)
+func (s *service) ValidateCampaignOwnership(campaignID int, userID int) error {
+	campaign, err := s.repository.FindByID(campaignID)
 	if err != nil {
-		return CampaignImage{}, err
+		return err
 	}
 
 	if campaign.ID == 0 {
-		return CampaignImage{}, ErrCampaignNotFound
+		return ErrCampaignNotFound
 	}
 
-	if campaign.UserID != input.User.ID {
-		return CampaignImage{}, ErrNotAuthorized
+	if campaign.UserID != userID {
+		return ErrNotAuthorized
 	}
 
+	return nil
+}
+
+func (s *service) SaveCampaignImage(input CreateCampaignImageInput, fileLocation string) (CampaignImage, error) {
 	isPrimary := 0
 	if input.IsPrimary {
 		isPrimary = 1

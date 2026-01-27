@@ -6,6 +6,7 @@ import (
 	"backer/user"
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -188,6 +189,27 @@ func (h *campaignHandler) UploadImage(c *gin.Context) {
 		return
 	}
 
+	err = h.service.ValidateCampaignOwnership(input.CampaignID, userID)
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error(), "is_uploaded": false}
+
+		if strings.Contains(err.Error(), "not found") {
+			response := helper.APIResponse(helper.MsgCampaignNotFound, http.StatusNotFound, "error", errorMessage)
+			c.JSON(http.StatusNotFound, response)
+			return
+		}
+
+		if strings.Contains(err.Error(), "not authorized") {
+			response := helper.APIResponse(helper.MsgNotAuthorizedToUploadImage, http.StatusForbidden, "error", errorMessage)
+			c.JSON(http.StatusForbidden, response)
+			return
+		}
+
+		response := helper.APIResponse(helper.MsgFailedToSaveImageToDatabase, http.StatusInternalServerError, "error", errorMessage)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
 	timestamp := time.Now().Unix()
 	fileName := fmt.Sprintf("%d-%d-%s", userID, timestamp, file.Filename)
 	path := fmt.Sprintf("images/%s", fileName)
@@ -202,20 +224,9 @@ func (h *campaignHandler) UploadImage(c *gin.Context) {
 
 	_, err = h.service.SaveCampaignImage(input, path)
 	if err != nil {
+		os.Remove(path)
+
 		errorMessage := gin.H{"errors": err.Error(), "is_uploaded": false}
-
-		if strings.Contains(err.Error(), "not found") {
-			response := helper.APIResponse(helper.MsgCampaignNotFound, http.StatusNotFound, "error", errorMessage)
-			c.JSON(http.StatusNotFound, response)
-			return
-		}
-
-		if strings.Contains(err.Error(), "unauthorized") {
-			response := helper.APIResponse(helper.MsgNotAuthorizedToUploadImage, http.StatusForbidden, "error", errorMessage)
-			c.JSON(http.StatusForbidden, response)
-			return
-		}
-
 		response := helper.APIResponse(helper.MsgFailedToSaveImageToDatabase, http.StatusInternalServerError, "error", errorMessage)
 		c.JSON(http.StatusInternalServerError, response)
 		return
