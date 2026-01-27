@@ -27,12 +27,12 @@ func (h *campaignHandler) GetCampaigns(c *gin.Context) {
 
 	campaigns, err := h.service.GetCampaigns(userID)
 	if err != nil {
-		response := helper.APIResponse("Failed to get campaigns", http.StatusBadRequest, "error", nil)
-		c.JSON(http.StatusBadRequest, response)
+		response := helper.APIResponse(helper.MsgFailedToGetCampaigns, http.StatusInternalServerError, "error", nil)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	response := helper.APIResponse("List of campaigns retrieved successfully", http.StatusOK, "success", campaign.FormatCampaigns(campaigns))
+	response := helper.APIResponse(helper.MsgListOfCampaignsRetrieved, http.StatusOK, "success", campaign.FormatCampaigns(campaigns))
 	c.JSON(http.StatusOK, response)
 }
 
@@ -41,7 +41,7 @@ func (h *campaignHandler) GetCampaign(c *gin.Context) {
 
 	err := c.ShouldBindUri(&input)
 	if err != nil {
-		response := helper.APIResponse("Invalid campaign ID", http.StatusBadRequest, "error", nil)
+		response := helper.APIResponse(helper.MsgInvalidCampaignID, http.StatusBadRequest, "error", nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -50,12 +50,12 @@ func (h *campaignHandler) GetCampaign(c *gin.Context) {
 	if err != nil {
 		errorMessage := gin.H{"errors": err.Error()}
 
-		response := helper.APIResponse("Campaign not found", http.StatusNotFound, "error", errorMessage)
+		response := helper.APIResponse(helper.MsgCampaignNotFound, http.StatusNotFound, "error", errorMessage)
 		c.JSON(http.StatusNotFound, response)
 		return
 	}
 
-	response := helper.APIResponse("Campaign detail retrieved successfully", http.StatusOK, "success", campaign.FormatCampaignDetail(campaignDetail))
+	response := helper.APIResponse(helper.MsgCampaignDetailRetrieved, http.StatusOK, "success", campaign.FormatCampaignDetail(campaignDetail))
 	c.JSON(http.StatusOK, response)
 }
 
@@ -67,7 +67,7 @@ func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.APIResponse("Invalid input", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.APIResponse(helper.MsgInvalidInput, http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
@@ -79,12 +79,12 @@ func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 	if err != nil {
 		errorMessage := gin.H{"errors": err.Error()}
 
-		response := helper.APIResponse("Failed to create campaign", http.StatusInternalServerError, "error", errorMessage)
+		response := helper.APIResponse(helper.MsgFailedToCreateCampaign, http.StatusInternalServerError, "error", errorMessage)
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	response := helper.APIResponse("Campaign created successfully", http.StatusCreated, "success", campaign.FormatCampaign(newCampaign))
+	response := helper.APIResponse(helper.MsgCampaignCreatedSuccessfully, http.StatusCreated, "success", campaign.FormatCampaign(newCampaign))
 	c.JSON(http.StatusCreated, response)
 }
 
@@ -96,7 +96,7 @@ func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.APIResponse("Invalid campaign ID", http.StatusBadRequest, "error", errorMessage)
+		response := helper.APIResponse(helper.MsgInvalidCampaignID, http.StatusBadRequest, "error", errorMessage)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -108,7 +108,7 @@ func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.APIResponse("Invalid input", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.APIResponse(helper.MsgInvalidInput, http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
@@ -121,23 +121,23 @@ func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 		errorMessage := gin.H{"errors": err.Error()}
 
 		if strings.Contains(err.Error(), "not found") {
-			response := helper.APIResponse("Campaign not found", http.StatusNotFound, "error", errorMessage)
+			response := helper.APIResponse(helper.MsgCampaignNotFound, http.StatusNotFound, "error", errorMessage)
 			c.JSON(http.StatusNotFound, response)
 			return
 		}
 
 		if strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "not authorized") {
-			response := helper.APIResponse("You are not authorized to update this campaign", http.StatusForbidden, "error", errorMessage)
+			response := helper.APIResponse(helper.MsgNotAuthorizedToUpdateCampaign, http.StatusForbidden, "error", errorMessage)
 			c.JSON(http.StatusForbidden, response)
 			return
 		}
 
-		response := helper.APIResponse("Failed to update campaign", http.StatusBadRequest, "error", errorMessage)
-		c.JSON(http.StatusBadRequest, response)
+		response := helper.APIResponse(helper.MsgFailedToUpdateCampaign, http.StatusInternalServerError, "error", errorMessage)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	response := helper.APIResponse("Campaign updated successfully", http.StatusOK, "success", campaign.FormatCampaign(updatedCampaign))
+	response := helper.APIResponse(helper.MsgCampaignUpdatedSuccessfully, http.StatusOK, "success", campaign.FormatCampaign(updatedCampaign))
 	c.JSON(http.StatusOK, response)
 }
 
@@ -149,7 +149,7 @@ func (h *campaignHandler) UploadImage(c *gin.Context) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.APIResponse("Invalid input", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.APIResponse(helper.MsgInvalidInput, http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
@@ -161,7 +161,7 @@ func (h *campaignHandler) UploadImage(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
-		response := helper.APIResponse("No file uploaded", http.StatusBadRequest, "error", data)
+		response := helper.APIResponse(helper.MsgNoFileUploaded, http.StatusBadRequest, "error", data)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -175,7 +175,7 @@ func (h *campaignHandler) UploadImage(c *gin.Context) {
 	ext := strings.ToLower(filepath.Ext(file.Filename))
 	if !allowedExtensions[ext] {
 		data := gin.H{"is_uploaded": false}
-		response := helper.APIResponse("Invalid file type. Only JPG, JPEG, and PNG are allowed", http.StatusBadRequest, "error", data)
+		response := helper.APIResponse(helper.MsgInvalidFileType, http.StatusBadRequest, "error", data)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -183,7 +183,7 @@ func (h *campaignHandler) UploadImage(c *gin.Context) {
 	maxSize := int64(2 << 20)
 	if file.Size > maxSize {
 		data := gin.H{"is_uploaded": false}
-		response := helper.APIResponse("File size too large. Maximum 2MB", http.StatusBadRequest, "error", data)
+		response := helper.APIResponse(helper.MsgFileTooLarge, http.StatusBadRequest, "error", data)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -195,7 +195,7 @@ func (h *campaignHandler) UploadImage(c *gin.Context) {
 	err = c.SaveUploadedFile(file, path)
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
-		response := helper.APIResponse("Failed to save file to server", http.StatusInternalServerError, "error", data)
+		response := helper.APIResponse(helper.MsgFailedToSaveFileToServer, http.StatusInternalServerError, "error", data)
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -205,23 +205,23 @@ func (h *campaignHandler) UploadImage(c *gin.Context) {
 		errorMessage := gin.H{"errors": err.Error(), "is_uploaded": false}
 
 		if strings.Contains(err.Error(), "not found") {
-			response := helper.APIResponse("Campaign not found", http.StatusNotFound, "error", errorMessage)
+			response := helper.APIResponse(helper.MsgCampaignNotFound, http.StatusNotFound, "error", errorMessage)
 			c.JSON(http.StatusNotFound, response)
 			return
 		}
 
 		if strings.Contains(err.Error(), "unauthorized") {
-			response := helper.APIResponse("You are not authorized to upload image for this campaign", http.StatusForbidden, "error", errorMessage)
+			response := helper.APIResponse(helper.MsgNotAuthorizedToUploadImage, http.StatusForbidden, "error", errorMessage)
 			c.JSON(http.StatusForbidden, response)
 			return
 		}
 
-		response := helper.APIResponse("Failed to save image to database", http.StatusInternalServerError, "error", errorMessage)
+		response := helper.APIResponse(helper.MsgFailedToSaveImageToDatabase, http.StatusInternalServerError, "error", errorMessage)
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	data := gin.H{"is_uploaded": true}
-	response := helper.APIResponse("Campaign image uploaded successfully", http.StatusOK, "success", data)
+	response := helper.APIResponse(helper.MsgCampaignImageUploadedSuccessfully, http.StatusOK, "success", data)
 	c.JSON(http.StatusOK, response)
 }

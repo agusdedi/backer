@@ -7,6 +7,12 @@ import (
 	"github.com/gosimple/slug"
 )
 
+// Custom errors
+var (
+	ErrCampaignNotFound = errors.New("campaign not found")
+	ErrNotAuthorized    = errors.New("not authorized")
+)
+
 type Service interface {
 	GetCampaigns(userID int) ([]Campaign, error)
 	GetCampaignByID(input GetCampaignDetailInput) (Campaign, error)
@@ -49,7 +55,7 @@ func (s *service) GetCampaignByID(input GetCampaignDetailInput) (Campaign, error
 	}
 
 	if campaign.ID == 0 {
-		return campaign, errors.New("Campaign not found")
+		return campaign, ErrCampaignNotFound
 	}
 
 	return campaign, nil
@@ -86,11 +92,11 @@ func (s *service) UpdateCampaign(inputID GetCampaignDetailInput, inputData Creat
 	}
 
 	if campaign.ID == 0 {
-		return campaign, errors.New("campaign not found")
+		return campaign, ErrCampaignNotFound
 	}
 
 	if campaign.UserID != inputData.User.ID {
-		return campaign, errors.New("not authorized to update this campaign")
+		return campaign, ErrNotAuthorized
 	}
 
 	campaign.Name = inputData.Name
@@ -116,11 +122,11 @@ func (s *service) SaveCampaignImage(input CreateCampaignImageInput, fileLocation
 	}
 
 	if campaign.ID == 0 {
-		return CampaignImage{}, errors.New("campaign not found")
+		return CampaignImage{}, ErrCampaignNotFound
 	}
 
 	if campaign.UserID != input.User.ID {
-		return CampaignImage{}, errors.New("not authorized to upload image for this campaign")
+		return CampaignImage{}, ErrNotAuthorized
 	}
 
 	isPrimary := 0

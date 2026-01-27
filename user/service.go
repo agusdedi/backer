@@ -6,6 +6,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Custom errors
+var (
+	ErrEmailAlreadyRegistered = errors.New("email already registered")
+	ErrUserNotFound           = errors.New("user not found")
+	ErrInvalidCredentials     = errors.New("invalid email or password")
+)
+
 type Service interface {
 	RegisterUser(input RegisterUserInput) (User, error)
 	Login(input LoginInput) (User, error)
@@ -21,8 +28,6 @@ type service struct {
 func NewService(repository Repository) *service {
 	return &service{repository}
 }
-
-var ErrEmailAlreadyRegistered = errors.New("email already registered")
 
 func (s *service) RegisterUser(input RegisterUserInput) (User, error) {
 	user := User{}
@@ -66,12 +71,12 @@ func (s *service) Login(input LoginInput) (User, error) {
 	}
 
 	if user.ID == 0 {
-		return user, errors.New("No user was found with that email")
+		return user, ErrInvalidCredentials
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		return user, err
+		return user, ErrInvalidCredentials
 	}
 
 	return user, nil
@@ -115,7 +120,7 @@ func (s *service) GetUserByID(ID int) (User, error) {
 	}
 
 	if user.ID == 0 {
-		return user, errors.New("User not found")
+		return user, ErrUserNotFound
 	}
 
 	return user, nil

@@ -28,7 +28,7 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.APIResponse("Invalid input", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.APIResponse(helper.MsgInvalidInput, http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
@@ -38,28 +38,27 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		errorMessage := gin.H{"errors": err.Error()}
 
 		if errors.Is(err, user.ErrEmailAlreadyRegistered) {
-			response := helper.APIResponse("Email already registered", http.StatusConflict, "error", errorMessage)
+			response := helper.APIResponse(helper.MsgEmailAlreadyRegistered, http.StatusConflict, "error", errorMessage)
 			c.JSON(http.StatusConflict, response)
 			return
 		}
 
-		response := helper.APIResponse("Registration failed", http.StatusBadRequest, "error", errorMessage)
+		response := helper.APIResponse(helper.MsgRegistrationFailed, http.StatusBadRequest, "error", errorMessage)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	token, err := h.authService.GenerateToken(newUser.ID)
-
 	if err != nil {
-		response := helper.APIResponse("Failed to generate authentication token", http.StatusBadRequest, "error", nil)
-		c.JSON(http.StatusBadRequest, response)
+		response := helper.APIResponse(helper.MsgFailedToGenerateToken, http.StatusInternalServerError, "error", nil)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	formatter := user.FormatUser(newUser, token)
 
-	response := helper.APIResponse("Account registered successfully", http.StatusOK, "success", formatter)
-	c.JSON(http.StatusOK, response)
+	response := helper.APIResponse(helper.MsgAccountRegisteredSuccessfully, http.StatusCreated, "success", formatter)
+	c.JSON(http.StatusCreated, response)
 }
 
 func (h *userHandler) Login(c *gin.Context) {
@@ -70,32 +69,30 @@ func (h *userHandler) Login(c *gin.Context) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.APIResponse("Invalid input", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.APIResponse(helper.MsgInvalidInput, http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
 
 	loggedinUser, err := h.userService.Login(input)
-
 	if err != nil {
 		errorMessage := gin.H{"errors": err.Error()}
 
-		response := helper.APIResponse("Invalid email or password", http.StatusUnprocessableEntity, "error", errorMessage)
-		c.JSON(http.StatusUnprocessableEntity, response)
+		response := helper.APIResponse(helper.MsgInvalidEmailOrPassword, http.StatusUnauthorized, "error", errorMessage)
+		c.JSON(http.StatusUnauthorized, response)
 		return
 	}
 
 	token, err := h.authService.GenerateToken(loggedinUser.ID)
-
 	if err != nil {
-		response := helper.APIResponse("Failed to generate authentication token", http.StatusBadRequest, "error", nil)
-		c.JSON(http.StatusBadRequest, response)
+		response := helper.APIResponse(helper.MsgFailedToGenerateToken, http.StatusInternalServerError, "error", nil)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	formatter := user.FormatUser(loggedinUser, token)
 
-	response := helper.APIResponse("Successfuly logged in", http.StatusOK, "success", formatter)
+	response := helper.APIResponse(helper.MsgSuccessfullyLoggedIn, http.StatusOK, "success", formatter)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -107,16 +104,15 @@ func (h *userHandler) CheckEmailAvailability(c *gin.Context) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.APIResponse("Email validation failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.APIResponse(helper.MsgEmailValidationFailed, http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
 
 	isEmailAvailable, err := h.userService.IsEmailAvailable(input)
-
 	if err != nil {
-		errorMessage := gin.H{"errors": "Unable to check email availability"}
-		response := helper.APIResponse("Email check failed", http.StatusInternalServerError, "error", errorMessage)
+		errorMessage := gin.H{"errors": helper.MsgUnableToCheckEmailAvailability}
+		response := helper.APIResponse(helper.MsgEmailCheckFailed, http.StatusInternalServerError, "error", errorMessage)
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -125,10 +121,9 @@ func (h *userHandler) CheckEmailAvailability(c *gin.Context) {
 		"is_available": isEmailAvailable,
 	}
 
-	metaMessage := "Email is already registered"
-
+	metaMessage := helper.MsgEmailAlreadyRegisteredCheck
 	if isEmailAvailable {
-		metaMessage = "Email is available"
+		metaMessage = helper.MsgEmailAvailable
 	}
 
 	response := helper.APIResponse(metaMessage, http.StatusOK, "success", data)
@@ -139,7 +134,7 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 	file, err := c.FormFile("avatar")
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
-		response := helper.APIResponse("No avatar file provided", http.StatusBadRequest, "error", data)
+		response := helper.APIResponse(helper.MsgNoAvatarFileProvided, http.StatusBadRequest, "error", data)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -152,20 +147,20 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 	err = c.SaveUploadedFile(file, path)
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
-		response := helper.APIResponse("Failed to save avatar file", http.StatusBadRequest, "error", data)
-		c.JSON(http.StatusBadRequest, response)
+		response := helper.APIResponse(helper.MsgFailedToSaveAvatarFile, http.StatusInternalServerError, "error", data)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	_, err = h.userService.SaveAvatar(userID, path)
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
-		response := helper.APIResponse("Failed to update avatar", http.StatusBadRequest, "error", data)
-		c.JSON(http.StatusBadRequest, response)
+		response := helper.APIResponse(helper.MsgFailedToUpdateAvatar, http.StatusInternalServerError, "error", data)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	data := gin.H{"is_uploaded": true}
-	response := helper.APIResponse("Avatar uploaded successfully", http.StatusOK, "success", data)
+	response := helper.APIResponse(helper.MsgAvatarUploadedSuccessfully, http.StatusOK, "success", data)
 	c.JSON(http.StatusOK, response)
 }
