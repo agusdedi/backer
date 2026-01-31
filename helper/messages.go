@@ -44,3 +44,11 @@ const (
 	MsgFailedToSaveImageToDatabase       = "Failed to save image to database"
 	MsgCampaignImageUploadedSuccessfully = "Campaign image uploaded successfully"
 )
+
+// Transaction messages
+const (
+	MsgInvalidTransactionInput              = "Invalid transaction input"
+	MsgFailedToGetCampaignTransactions      = "Failed to get campaign transactions"
+	MsgCampaignTransactionsRetrievedSuccess = "Campaign transactions retrieved successfully"
+	MsgNotAuthorizedToViewTransactions      = "You are not authorized to view these transactions"
+)
