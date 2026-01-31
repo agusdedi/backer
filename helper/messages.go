@@ -51,4 +51,6 @@ const (
 	MsgFailedToGetCampaignTransactions      = "Failed to get campaign transactions"
 	MsgCampaignTransactionsRetrievedSuccess = "Campaign transactions retrieved successfully"
 	MsgNotAuthorizedToViewTransactions      = "You are not authorized to view these transactions"
+	MsgFailedToGetUserTransactions          = "Failed to get user transactions"
+	MsgUserTransactionsRetrievedSuccess     = "User transactions retrieved successfully"
 )
