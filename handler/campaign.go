@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -65,8 +66,8 @@ func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		errors := helper.FormatValidationError(err)
-		errorMessage := gin.H{"errors": errors}
+		validationErrors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": validationErrors}
 
 		response := helper.APIResponse(helper.MsgInvalidInput, http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
@@ -94,8 +95,8 @@ func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 
 	err := c.ShouldBindUri(&inputID)
 	if err != nil {
-		errors := helper.FormatValidationError(err)
-		errorMessage := gin.H{"errors": errors}
+		validationErrors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": validationErrors}
 
 		response := helper.APIResponse(helper.MsgInvalidCampaignID, http.StatusBadRequest, "error", errorMessage)
 		c.JSON(http.StatusBadRequest, response)
@@ -106,8 +107,8 @@ func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 
 	err = c.ShouldBindJSON(&inputData)
 	if err != nil {
-		errors := helper.FormatValidationError(err)
-		errorMessage := gin.H{"errors": errors}
+		validationErrors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": validationErrors}
 
 		response := helper.APIResponse(helper.MsgInvalidInput, http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
@@ -147,8 +148,8 @@ func (h *campaignHandler) UploadImage(c *gin.Context) {
 
 	err := c.ShouldBind(&input)
 	if err != nil {
-		errors := helper.FormatValidationError(err)
-		errorMessage := gin.H{"errors": errors}
+		validationErrors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": validationErrors}
 
 		response := helper.APIResponse(helper.MsgInvalidInput, http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
@@ -211,8 +212,13 @@ func (h *campaignHandler) UploadImage(c *gin.Context) {
 	}
 
 	timestamp := time.Now().Unix()
-	fileName := fmt.Sprintf("%d-%d-%s", userID, timestamp, file.Filename)
-	path := fmt.Sprintf("images/%s", fileName)
+	filename := file.Filename
+	filename = strings.ReplaceAll(filename, " ", "-")
+	re := regexp.MustCompile(`[^a-zA-Z0-9._-]`)
+	filename = re.ReplaceAllString(filename, "")
+
+	fileName := fmt.Sprintf("%d-%d-%s", userID, timestamp, filename)
+	path := fmt.Sprintf("images/campaign-images/%s", fileName)
 
 	err = c.SaveUploadedFile(file, path)
 	if err != nil {

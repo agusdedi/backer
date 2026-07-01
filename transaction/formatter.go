@@ -1,5 +1,11 @@
 package transaction
 
+import (
+	"backer/config"
+	"backer/helper"
+	"strings"
+)
+
 type CampaignTransactionFormatter struct {
 	ID        int    `json:"id"`
 	Name      string `json:"name"`
@@ -12,7 +18,7 @@ func FormatCampaignTransaction(transaction Transaction) CampaignTransactionForma
 	formatter.ID = transaction.ID
 	formatter.Name = transaction.User.Name
 	formatter.Amount = transaction.Amount
-	formatter.CreatedAt = transaction.CreatedAt.Format("2006-01-02 15:04:05")
+	formatter.CreatedAt = transaction.CreatedAt.Format(helper.DateTimeFormat)
 
 	return formatter
 }
@@ -50,14 +56,14 @@ func FormatUserTransaction(transaction Transaction) UserTransactionFormatter {
 	formatter.ID = transaction.ID
 	formatter.Amount = transaction.Amount
 	formatter.Status = transaction.Status
-	formatter.CreatedAt = transaction.CreatedAt.Format("2006-01-02 15:04:05")
+	formatter.CreatedAt = transaction.CreatedAt.Format(helper.DateTimeFormat)
 
 	campaignFormatter := CampaignFormatter{}
 	campaignFormatter.Name = transaction.Campaign.Name
 	campaignFormatter.ImageURL = ""
 
 	if len(transaction.Campaign.CampaignImages) > 0 {
-		campaignFormatter.ImageURL = transaction.Campaign.CampaignImages[0].FileName
+		campaignFormatter.ImageURL = buildImageURL(transaction.Campaign.CampaignImages[0].FileName)
 	}
 
 	formatter.Campaign = campaignFormatter
@@ -78,4 +84,40 @@ func FormatUserTransactions(transactions []Transaction) []UserTransactionFormatt
 	}
 
 	return transactionsFormatter
+}
+
+type TransactionFormatter struct {
+	ID         int    `json:"id"`
+	CampaignID int    `json:"campaign_id"`
+	UserID     int    `json:"user_id"`
+	Amount     int    `json:"amount"`
+	Status     string `json:"status"`
+	Code       string `json:"code"`
+	PaymentURL string `json:"payment_url"`
+	CreatedAt  string `json:"created_at"`
+}
+
+func FormatTransaction(transaction Transaction) TransactionFormatter {
+	formatter := TransactionFormatter{}
+	formatter.ID = transaction.ID
+	formatter.CampaignID = transaction.CampaignID
+	formatter.UserID = transaction.UserID
+	formatter.Amount = transaction.Amount
+	formatter.Status = transaction.Status
+	formatter.Code = transaction.Code
+	formatter.PaymentURL = transaction.PaymentURL
+	formatter.CreatedAt = transaction.CreatedAt.Format(helper.DateTimeFormat)
+	return formatter
+}
+
+func buildImageURL(fileName string) string {
+	if fileName == "" {
+		return ""
+	}
+
+	if strings.HasPrefix(fileName, "http") {
+		return fileName
+	}
+
+	return config.AppConfig.ImageBaseURL + "/" + fileName
 }

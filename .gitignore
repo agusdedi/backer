@@ -1,0 +1,7 @@
+.env
+.DS_Store
+images/.DS_Store
+images/avatars/*
+images/campaign-images/*
+!images/avatars/.gitkeep
+!images/campaign-images/.gitkeep

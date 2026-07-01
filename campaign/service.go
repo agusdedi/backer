@@ -63,7 +63,7 @@ func (s *service) GetCampaignByID(input GetCampaignDetailInput) (Campaign, error
 }
 
 func (s *service) generateCampaignSlug(name string, userID int) string {
-	slugCandidate := fmt.Sprintf("%s %d", name, userID)
+	slugCandidate := fmt.Sprintf("%d %s", userID, name)
 	return slug.Make(slugCandidate)
 }
 
@@ -105,8 +105,6 @@ func (s *service) UpdateCampaign(inputID GetCampaignDetailInput, inputData Creat
 	campaign.Description = inputData.Description
 	campaign.GoalAmount = inputData.GoalAmount
 	campaign.Perks = inputData.Perks
-
-	campaign.Slug = s.generateCampaignSlug(inputData.Name, inputData.User.ID)
 
 	updatedCampaign, err := s.repository.Update(campaign)
 	if err != nil {

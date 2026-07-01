@@ -1,6 +1,7 @@
 package campaign
 
 import (
+	"backer/config"
 	"strings"
 )
 
@@ -27,7 +28,7 @@ func FormatCampaign(campaign Campaign) CampaignFormatter {
 	campaignFormatter.ImageURL = ""
 
 	if len(campaign.CampaignImages) > 0 {
-		campaignFormatter.ImageURL = campaign.CampaignImages[0].FileName
+		campaignFormatter.ImageURL = buildImageURL(campaign.CampaignImages[0].FileName)
 	}
 
 	return campaignFormatter
@@ -52,6 +53,7 @@ type CampaignDetailFormatter struct {
 	ImageURL         string                   `json:"image_url"`
 	GoalAmount       int                      `json:"goal_amount"`
 	CurrentAmount    int                      `json:"current_amount"`
+	BackerCount      int                      `json:"backer_count"`
 	UserID           int                      `json:"user_id"`
 	Slug             string                   `json:"slug"`
 	User             CampaignUserFormatter    `json:"user"`
@@ -77,12 +79,13 @@ func FormatCampaignDetail(campaign Campaign) CampaignDetailFormatter {
 	campaignDetailFormatter.Description = campaign.Description
 	campaignDetailFormatter.GoalAmount = campaign.GoalAmount
 	campaignDetailFormatter.CurrentAmount = campaign.CurrentAmount
+	campaignDetailFormatter.BackerCount = campaign.BackerCount
 	campaignDetailFormatter.UserID = campaign.UserID
 	campaignDetailFormatter.Slug = campaign.Slug
 	campaignDetailFormatter.ImageURL = ""
 
 	if len(campaign.CampaignImages) > 0 {
-		campaignDetailFormatter.ImageURL = campaign.CampaignImages[0].FileName
+		campaignDetailFormatter.ImageURL = buildImageURL(campaign.CampaignImages[0].FileName)
 	}
 
 	var perks []string
@@ -97,15 +100,13 @@ func FormatCampaignDetail(campaign Campaign) CampaignDetailFormatter {
 
 	campaignUserFormatter := CampaignUserFormatter{}
 	campaignUserFormatter.Name = user.Name
-	campaignUserFormatter.ImageURL = user.AvatarFileName
-
+	campaignUserFormatter.ImageURL = buildImageURL(user.AvatarFileName)
 	campaignDetailFormatter.User = campaignUserFormatter
 
 	images := []CampaignImageFormatter{}
-
 	for _, image := range campaign.CampaignImages {
 		campaignImageFormatter := CampaignImageFormatter{}
-		campaignImageFormatter.ImageURL = image.FileName
+		campaignImageFormatter.ImageURL = buildImageURL(image.FileName)
 
 		isPrimary := false
 
@@ -120,4 +121,16 @@ func FormatCampaignDetail(campaign Campaign) CampaignDetailFormatter {
 	campaignDetailFormatter.Images = images
 
 	return campaignDetailFormatter
+}
+
+func buildImageURL(fileName string) string {
+	if fileName == "" {
+		return ""
+	}
+
+	if strings.HasPrefix(fileName, "http") {
+		return fileName
+	}
+
+	return config.AppConfig.ImageBaseURL + "/" + fileName
 }

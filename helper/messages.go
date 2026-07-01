@@ -15,6 +15,7 @@ const (
 	MsgSuccessfullyLoggedIn           = "Successfully logged in"
 	MsgEmailValidationFailed          = "Email validation failed"
 	MsgEmailCheckFailed               = "Email check failed"
+	MsgUserDataRetrievedSuccessfully  = "User data retrieved successfully"
 	MsgUnableToCheckEmailAvailability = "Unable to check email availability"
 	MsgEmailAlreadyRegisteredCheck    = "Email is already registered"
 	MsgEmailAvailable                 = "Email is available"
@@ -53,4 +54,6 @@ const (
 	MsgNotAuthorizedToViewTransactions      = "You are not authorized to view these transactions"
 	MsgFailedToGetUserTransactions          = "Failed to get user transactions"
 	MsgUserTransactionsRetrievedSuccess     = "User transactions retrieved successfully"
+	MsgFailedToCreateTransaction            = "Failed to create transaction"
+	MsgTransactionCreatedSuccessfully       = "Transaction created successfully"
 )
