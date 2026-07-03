@@ -7,10 +7,12 @@ import (
 )
 
 type CampaignTransactionFormatter struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	Amount    int    `json:"amount"`
-	CreatedAt string `json:"created_at"`
+	ID        int               `json:"id"`
+	Name      string            `json:"name"`
+	Amount    int               `json:"amount"`
+	Status    string            `json:"status"`
+	CreatedAt string            `json:"created_at"`
+	Campaign  CampaignFormatter `json:"campaign"`
 }
 
 func FormatCampaignTransaction(transaction Transaction) CampaignTransactionFormatter {
@@ -18,7 +20,18 @@ func FormatCampaignTransaction(transaction Transaction) CampaignTransactionForma
 	formatter.ID = transaction.ID
 	formatter.Name = transaction.User.Name
 	formatter.Amount = transaction.Amount
+	formatter.Status = transaction.Status
 	formatter.CreatedAt = transaction.CreatedAt.Format(helper.DateTimeFormat)
+
+	campaignFormatter := CampaignFormatter{}
+	campaignFormatter.Name = transaction.Campaign.Name
+	campaignFormatter.ImageURL = ""
+
+	if len(transaction.Campaign.CampaignImages) > 0 {
+		campaignFormatter.ImageURL = buildImageURL(transaction.Campaign.CampaignImages[0].FileName)
+	}
+
+	formatter.Campaign = campaignFormatter
 
 	return formatter
 }
