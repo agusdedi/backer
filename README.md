@@ -73,7 +73,7 @@ Contributions and suggestions are welcome. For major changes, please open an iss
 
 ## License
 
-Not yet specified — add a `LICENSE` file if you'd like to set one (e.g. MIT).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
