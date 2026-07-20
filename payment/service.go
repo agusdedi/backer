@@ -60,12 +60,14 @@ func (s *service) GetPaymentURL(transaction Transaction, user user.User) (string
 			FName: user.Name,
 			Email: user.Email,
 		},
+		Callbacks: &snap.Callbacks{
+			Finish: os.Getenv("FRONTEND_URL") + "/fund-success",
+		},
 	}
 
 	snapResp, err := snapClient.CreateTransaction(snapReq)
 	if err != nil {
 		return "", err
 	}
-
 	return snapResp.RedirectURL, nil
 }
